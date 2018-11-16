@@ -5,22 +5,21 @@
 
 #include <eosiolib/asset.hpp>
 #include <eosiolib/eosio.hpp>
-#include "../eosio.token/eosio.token.hpp"
+#include <eosiolib/transaction.hpp>
+#include <eosiolib/crypto.h>
 
 #include <string>
-
-namespace eosiosystem {
-    class system_contract;
-}
 
 namespace Gamble {
 
     using std::string;
-    using eosio::asset;
+    using namespace eosio;
 
     class gamble : public contract {
+
     public:
         gamble( account_name self ):contract(self){}
+
         // @abi action
         void start();
 
@@ -34,8 +33,6 @@ namespace Gamble {
 
     private:
 
-        bool isStart = false;
-
         // @abi table player_info i64
         struct player_info {
             account_name player;
@@ -47,7 +44,19 @@ namespace Gamble {
             EOSLIB_SERIALIZE(player_info, (player)(bet)(number))
         };
 
+        struct account {
+            asset    balance;
+            uint64_t primary_key()const { return balance.symbol.name(); }
+        };
+
+        struct isStart {
+            bool status;
+            uint64_t primary_key()const { return status; }
+        };
+
         typedef eosio::multi_index<N(player_info), player_info> Player_info;
+        typedef eosio::multi_index<N(accounts), account> accounts;
+        typedef eosio::multi_index<N(isStart), isStart> IsStart;
 
         // @abi action
         void subbalance( account_name owner, asset value );
@@ -56,6 +65,7 @@ namespace Gamble {
 
         uint64_t randomNumber();
 
-    }
-    EOSIO_ABI(Gamble, (start)(announce)(play))
+    };
+
+    EOSIO_ABI(gamble, (start)(announce)(play));
 }
